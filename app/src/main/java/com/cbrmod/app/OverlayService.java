@@ -145,29 +145,42 @@ public class OverlayService extends Service {
         subtitle.setPadding(0, dp(2), 0, dp(5));
         shell.addView(subtitle);
 
-        GridLayout grid = new GridLayout(this);
-        grid.setColumnCount(2);
+        LinearLayout workspace = new LinearLayout(this);
+        workspace.setOrientation(LinearLayout.HORIZONTAL);
+        workspace.setGravity(Gravity.TOP);
+        LinearLayout navigation = new LinearLayout(this);
+        navigation.setOrientation(LinearLayout.VERTICAL);
+        navigation.setPadding(dp(4), dp(4), dp(4), dp(4));
+        navigation.setBackground(shape(Color.rgb(48, 37, 68), 10, Color.rgb(75, 55, 105)));
         String[] categories = {"AIMBOT", "ESP", "MEMORY", "PLAYER", "GRAPHICS", "SETTINGS", "CONFIGS"};
         for (String category : categories) {
-            TextView tab = text(category, 10, WHITE, true);
+            TextView tab = text(category, 8, WHITE, true);
             tab.setGravity(Gravity.CENTER);
-            tab.setPadding(dp(5), dp(5), dp(5), dp(5));
-            tab.setBackground(shape(category.equals(selected) ? Color.rgb(75, 45, 125) : Color.rgb(31, 25, 51), 9, category.equals(selected) ? CYAN : Color.rgb(67, 56, 91)));
-            GridLayout.LayoutParams lp = new GridLayout.LayoutParams();
-            lp.width = dp(145); lp.height = dp(32);
-            lp.setMargins(dp(3), dp(2), dp(3), dp(2));
-            grid.addView(tab, lp);
-            tab.setOnClickListener(v -> { selected = category; updatePanelContent(); refreshTabs(grid, categories); });
+            tab.setPadding(dp(3), dp(7), dp(3), dp(7));
+            LinearLayout.LayoutParams tabLp = new LinearLayout.LayoutParams(-1, dp(29));
+            tabLp.bottomMargin = dp(3);
+            navigation.addView(tab, tabLp);
+            tab.setBackground(shape(category.equals(selected) ? Color.rgb(103, 59, 164) : Color.rgb(65, 54, 83), 7, category.equals(selected) ? CYAN : Color.rgb(83, 70, 103)));
+            tab.setOnClickListener(v -> {
+                selected = category;
+                updatePanelContent();
+                for (int i = 0; i < navigation.getChildCount(); i++) {
+                    TextView item = (TextView) navigation.getChildAt(i);
+                    String name = categories[i];
+                    item.setBackground(shape(name.equals(selected) ? Color.rgb(103, 59, 164) : Color.rgb(65, 54, 83), 7, name.equals(selected) ? CYAN : Color.rgb(83, 70, 103)));
+                }
+            });
         }
-        shell.addView(grid);
-
+        LinearLayout.LayoutParams navLp = new LinearLayout.LayoutParams(dp(88), -2);
+        navLp.rightMargin = dp(7);
+        workspace.addView(navigation, navLp);
         panelBody = new LinearLayout(this);
         panelBody.setOrientation(LinearLayout.VERTICAL);
-        panelBody.setPadding(dp(9), dp(7), dp(9), dp(7));
-        panelBody.setBackground(shape(Color.rgb(25, 20, 43), 11, Color.rgb(58, 47, 82)));
-        LinearLayout.LayoutParams bodyLp = new LinearLayout.LayoutParams(-1, dp(88));
-        bodyLp.topMargin = dp(5);
-        shell.addView(panelBody, bodyLp);
+        panelBody.setPadding(dp(10), dp(9), dp(10), dp(8));
+        panelBody.setBackground(shape(Color.rgb(61, 51, 78), 10, Color.rgb(94, 76, 119)));
+        LinearLayout.LayoutParams bodyLp = new LinearLayout.LayoutParams(0, dp(224), 1);
+        workspace.addView(panelBody, bodyLp);
+        shell.addView(workspace);
         updatePanelContent();
 
         TextView hint = text("3 TOQUES NA BOLHA: MOSTRAR / OCULTAR", 7, Color.rgb(165, 153, 190), true);
@@ -192,38 +205,31 @@ public class OverlayService extends Service {
 
         panel = shell;
         int screenWidth = getResources().getDisplayMetrics().widthPixels;
-        int panelWidth = Math.min(dp(330), screenWidth - dp(20));
+        int panelWidth = Math.min(dp(370), screenWidth - dp(16));
         panelParams = new WindowManager.LayoutParams(panelWidth, -2, type(), WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT);
         panelParams.gravity = Gravity.CENTER;
         wm.addView(panel, panelParams);
-    }
-
-    private void refreshTabs(GridLayout grid, String[] categories) {
-        for (int i = 0; i < grid.getChildCount(); i++) {
-            TextView tab = (TextView)grid.getChildAt(i);
-            String category = categories[i];
-            tab.setBackground(shape(category.equals(selected) ? Color.rgb(75, 45, 125) : Color.rgb(31, 25, 51), 9, category.equals(selected) ? CYAN : Color.rgb(67, 56, 91)));
-        }
     }
 
     private void updatePanelContent() {
         if (panelBody == null) return;
         panelBody.removeAllViews();
         panelBody.addView(text(selected, 12, CYAN, true));
+        panelBody.addView(text("━━━━━━━━━━━━━━━━━━━━", 8, Color.rgb(157, 137, 183), false));
         String message;
         if ("AIMBOT".equals(selected) || "ESP".equals(selected) || "MEMORY".equals(selected)) {
-            message = "Módulo demonstrativo. Não altera a mira, não revela jogadores e não modifica a memória do Free Fire.";
+            message = "Área reservada para informações do módulo. Esta versão não altera a mira, não revela jogadores e não modifica a memória do jogo.";
         } else if ("PLAYER".equals(selected)) {
-            message = "Área do jogador. Use a tela inicial do CBR MOD para abrir o Free Fire.";
+            message = "Informações e preferências do jogador serão organizadas aqui.";
         } else if ("GRAPHICS".equals(selected)) {
-            message = "Ajustes gráficos são feitos nas opções oficiais do próprio jogo.";
+            message = "Atalhos e orientações para as opções gráficas oficiais do Free Fire.";
         } else if ("SETTINGS".equals(selected)) {
-            message = "Arraste a bolha para reposicionar. Três toques alternam o painel.";
+            message = "Arraste a bolha para reposicionar. Três toques alternam a exibição do painel.";
         } else {
-            message = "Perfis e preferências locais. Mais opções serão organizadas após as referências visuais.";
+            message = "Área para perfis e preferências locais. As opções serão definidas com suas referências.";
         }
         TextView detail = text(message, 10, WHITE, false);
-        detail.setPadding(0, dp(4), 0, 0);
+        detail.setPadding(0, dp(8), 0, 0);
         panelBody.addView(detail);
     }
 

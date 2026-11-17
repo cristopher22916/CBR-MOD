@@ -10,8 +10,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.view.Gravity;
-import android.view.View;
-import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -28,7 +26,7 @@ public class MainActivity extends Activity {
         getWindow().setStatusBarColor(Color.rgb(10, 8, 22));
         getWindow().setNavigationBarColor(Color.rgb(10, 8, 22));
         prefs = getSharedPreferences("cbr", MODE_PRIVATE);
-        if (prefs.getBoolean("logged", false)) showLauncher(); else showLogin();
+        showWelcome();
     }
 
     private int dp(float n) { return (int)(n * getResources().getDisplayMetrics().density + 0.5f); }
@@ -78,57 +76,89 @@ public class MainActivity extends Activity {
         b.setAllCaps(false);
         b.setTextSize(14);
         b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(105, 55, 220)));
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(52));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(-1, dp(54));
         lp.topMargin = dp(16);
         root.addView(b, lp);
         return b;
     }
 
+    private void note(String value) {
+        TextView info = new TextView(this);
+        info.setText(value);
+        info.setTextColor(Color.LTGRAY);
+        info.setTextSize(12);
+        info.setGravity(Gravity.CENTER);
+        info.setPadding(dp(4), dp(18), dp(4), 0);
+        root.addView(info, new LinearLayout.LayoutParams(-1, dp(76)));
+    }
+
+    // First screen: the requested single action.
+    private void showWelcome() {
+        base("CBR MOD", "FREE FIRE  •  PAINEL COMPANHEIRO");
+        root.addView(new android.view.View(this), new LinearLayout.LayoutParams(1, 0, 1));
+        Button start = button("INJETAR PAINEL NO FREE FIRE");
+        start.setOnClickListener(v -> showMiniPanel());
+        note("Toque para abrir o mini painel CBR MOD.");
+    }
+
+    // Second screen: a compact launcher step before authentication.
+    private void showMiniPanel() {
+        base("CBR MOD", "MINI PAINEL");
+        TextView card = new TextView(this);
+        card.setText("PAINEL EXTERNO\n\nEntre para liberar a etapa de ativação.");
+        card.setTextColor(Color.WHITE);
+        card.setTextSize(16);
+        card.setGravity(Gravity.CENTER);
+        card.setBackgroundColor(Color.rgb(25, 19, 45));
+        root.addView(card, new LinearLayout.LayoutParams(-1, dp(180)));
+        Button access = button("ACESSAR PAINEL");
+        access.setOnClickListener(v -> showLogin());
+        Button back = button("VOLTAR");
+        back.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(55, 48, 75)));
+        back.setOnClickListener(v -> showWelcome());
+    }
+
     private void showLogin() {
-        base("CBR MOD", "PAINEL COMPANHEIRO • ANDROID");
+        base("CBR MOD", "LOGIN DE ACESSO");
         EditText user = field("Usuário", false);
         EditText pass = field("Senha", true);
         Button enter = button("ENTRAR");
         enter.setOnClickListener(v -> {
             if ("criscbr".equals(user.getText().toString().trim()) && "1234".equals(pass.getText().toString())) {
                 prefs.edit().putBoolean("logged", true).apply();
-                showLauncher();
+                showInjectScreen();
             } else Toast.makeText(this, "Usuário ou senha incorretos.", Toast.LENGTH_SHORT).show();
         });
-        TextView info = new TextView(this);
-        info.setText("Acesso local de demonstração");
-        info.setTextColor(Color.GRAY);
-        info.setGravity(Gravity.CENTER);
-        root.addView(info, new LinearLayout.LayoutParams(-1, dp(50)));
+        note("Acesso permanente • informe seus dados para continuar.");
     }
 
-    private void showLauncher() {
-        base("CBR MOD", "BEM-VINDO • CENTRAL DE CONTROLE");
-        Button overlay = button("INJETAR PAINEL");
-        overlay.setOnClickListener(v -> {
-            if (!Settings.canDrawOverlays(this)) {
-                Intent i = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
-                startActivityForResult(i, OVERLAY_REQUEST);
-            } else startOverlay();
-        });
-        Button game = button("ABRIR FREE FIRE");
-        game.setOnClickListener(v -> openGame());
-        Button logout = button("SAIR DA CONTA");
-        logout.setBackgroundTintList(android.content.res.ColorStateList.valueOf(Color.rgb(55, 48, 75)));
-        logout.setOnClickListener(v -> { prefs.edit().putBoolean("logged", false).apply(); stopService(new Intent(this, OverlayService.class)); showLogin(); });
-        TextView note = new TextView(this);
-        note.setText("O painel é um utilitário independente. Ele não injeta código nem modifica o jogo.");
-        note.setTextColor(Color.LTGRAY);
-        note.setTextSize(12);
-        note.setGravity(Gravity.CENTER);
-        note.setPadding(0, dp(24), 0, 0);
-        root.addView(note, new LinearLayout.LayoutParams(-1, dp(72)));
+    private void showInjectScreen() {
+        base("CBR MOD", "ACESSO LIBERADO");
+        TextView status = new TextView(this);
+        status.setText("LOGIN APROVADO\n\nFree Fire pronto para abrir.");
+        status.setTextColor(Color.WHITE);
+        status.setTextSize(16);
+        status.setGravity(Gravity.CENTER);
+        status.setBackgroundColor(Color.rgb(25, 19, 45));
+        root.addView(status, new LinearLayout.LayoutParams(-1, dp(150)));
+        Button inject = button("INJETAR NO JOGO");
+        inject.setOnClickListener(v -> requestOverlayAndLaunch());
+        note("Esta ação inicia o painel companheiro e abre o Free Fire. Não injeta código nem modifica o jogo.");
     }
 
-    private void startOverlay() {
-        Intent i = new Intent(this, OverlayService.class);
-        if (Build.VERSION.SDK_INT >= 26) startForegroundService(i); else startService(i);
-        Toast.makeText(this, "Painel flutuante iniciado.", Toast.LENGTH_SHORT).show();
+    private void requestOverlayAndLaunch() {
+        if (!Settings.canDrawOverlays(this)) {
+            Intent i = new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName()));
+            startActivityForResult(i, OVERLAY_REQUEST);
+        } else startOverlayAndGame();
+    }
+
+    private void startOverlayAndGame() {
+        Intent service = new Intent(this, OverlayService.class);
+        service.putExtra("open_panel", true);
+        if (Build.VERSION.SDK_INT >= 26) startForegroundService(service); else startService(service);
+        openGame();
+        Toast.makeText(this, "Painel companheiro iniciado.", Toast.LENGTH_SHORT).show();
     }
 
     private void openGame() {
@@ -141,7 +171,7 @@ public class MainActivity extends Activity {
     @Override protected void onActivityResult(int request, int result, Intent data) {
         super.onActivityResult(request, result, data);
         if (request == OVERLAY_REQUEST) {
-            if (Settings.canDrawOverlays(this)) startOverlay();
+            if (Settings.canDrawOverlays(this)) startOverlayAndGame();
             else Toast.makeText(this, "Permissão de sobreposição não concedida.", Toast.LENGTH_SHORT).show();
         }
     }

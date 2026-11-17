@@ -199,7 +199,10 @@ public class OverlayService extends Service {
         panelBody.addView(detail);
     }
 
-    @Override public int onStartCommand(Intent intent, int flags, int startId) {\n        if (intent != null && intent.getBooleanExtra("open_panel", false) && panel == null) togglePanel();\n        return START_STICKY;\n    }
+    @Override public int onStartCommand(Intent intent, int flags, int startId) {
+        if (intent != null && intent.getBooleanExtra("open_panel", false) && panel == null) togglePanel();
+        return START_STICKY;
+    }
 
     @Override public void onDestroy() {
         if (wm != null) {

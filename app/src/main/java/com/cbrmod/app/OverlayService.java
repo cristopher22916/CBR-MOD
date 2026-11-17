@@ -32,8 +32,10 @@ public class OverlayService extends Service {
     private boolean moved;
     private String selected = "PLAYER";
     private LinearLayout panelBody;
+    private static final int GREEN = Color.rgb(65, 220, 125);
+    private static final int YELLOW = Color.rgb(255, 205, 65);
     private static final int PURPLE = Color.rgb(139, 83, 255);
-    private static final int CYAN = Color.rgb(71, 218, 255);
+    private static final int CYAN = GREEN;
     private static final int WHITE = Color.rgb(245, 242, 255);
 
     @Override public void onCreate() {
@@ -75,7 +77,7 @@ public class OverlayService extends Service {
     private void createBubble() {
         bubble = text("CBR", 13, Color.WHITE, true);
         bubble.setGravity(Gravity.CENTER);
-        bubble.setBackground(shape(PURPLE, 18, CYAN));
+        bubble.setBackground(shape(Color.rgb(20, 27, 25), 18, GREEN));
         bubbleParams = new WindowManager.LayoutParams(dp(58), dp(58), type(), WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT);
         bubbleParams.gravity = Gravity.TOP | Gravity.START;
         bubbleParams.x = dp(18);
@@ -118,14 +120,13 @@ public class OverlayService extends Service {
         LinearLayout shell = new LinearLayout(this);
         shell.setOrientation(LinearLayout.VERTICAL);
         shell.setPadding(dp(8), dp(6), dp(8), dp(6));
-        shell.setBackground(shape(Color.rgb(16, 12, 31), 20, PURPLE));
+        shell.setBackground(shape(Color.rgb(13, 17, 16), 20, GREEN));
 
         LinearLayout header = new LinearLayout(this);
         header.setGravity(Gravity.CENTER_VERTICAL);
         header.setOrientation(LinearLayout.HORIZONTAL);
-        ImageView emblem = new ImageView(this);
-        emblem.setImageResource(R.drawable.cbr_floating_logo_full);
-        emblem.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        TextView emblem = text("♛", 24, GREEN, true);
+        emblem.setGravity(Gravity.CENTER);
         LinearLayout.LayoutParams emblemLp = new LinearLayout.LayoutParams(dp(30), dp(30));
         emblemLp.rightMargin = dp(7);
         header.addView(emblem, emblemLp);
@@ -133,7 +134,7 @@ public class OverlayService extends Service {
         brand.setOrientation(LinearLayout.VERTICAL);
         brand.setGravity(Gravity.CENTER_VERTICAL);
         brand.addView(text("CBR MOD", 16, WHITE, true));
-        brand.addView(text("PAINEL FLUTUANTE", 7, CYAN, true));
+        brand.addView(text("PAINEL FLUTUANTE", 7, YELLOW, true));
         header.addView(brand);
         TextView close = text("✕", 19, WHITE, true);
         close.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
@@ -151,7 +152,7 @@ public class OverlayService extends Service {
         LinearLayout navigation = new LinearLayout(this);
         navigation.setOrientation(LinearLayout.VERTICAL);
         navigation.setPadding(dp(3), dp(3), dp(3), dp(3));
-        navigation.setBackground(shape(Color.rgb(48, 37, 68), 10, Color.rgb(75, 55, 105)));
+        navigation.setBackground(shape(Color.rgb(25, 29, 27), 10, YELLOW));
         String[] categories = {"AIMBOT", "ESP", "MEMORY", "PLAYER", "GRAPHICS", "SETTINGS", "CONFIGS"};
         for (String category : categories) {
             TextView tab = text(category, 8, WHITE, true);
@@ -160,14 +161,14 @@ public class OverlayService extends Service {
             LinearLayout.LayoutParams tabLp = new LinearLayout.LayoutParams(-1, dp(23));
             tabLp.bottomMargin = dp(2);
             navigation.addView(tab, tabLp);
-            tab.setBackground(shape(category.equals(selected) ? Color.rgb(103, 59, 164) : Color.rgb(65, 54, 83), 7, category.equals(selected) ? CYAN : Color.rgb(83, 70, 103)));
+            tab.setBackground(shape(category.equals(selected) ? Color.rgb(28, 83, 53) : Color.rgb(38, 43, 40), 7, category.equals(selected) ? GREEN : Color.rgb(80, 86, 82)));
             tab.setOnClickListener(v -> {
                 selected = category;
                 updatePanelContent();
                 for (int i = 0; i < navigation.getChildCount(); i++) {
                     TextView item = (TextView) navigation.getChildAt(i);
                     String name = categories[i];
-                    item.setBackground(shape(name.equals(selected) ? Color.rgb(103, 59, 164) : Color.rgb(65, 54, 83), 7, name.equals(selected) ? CYAN : Color.rgb(83, 70, 103)));
+                    item.setBackground(shape(name.equals(selected) ? Color.rgb(28, 83, 53) : Color.rgb(38, 43, 40), 7, name.equals(selected) ? GREEN : Color.rgb(80, 86, 82)));
                 }
             });
         }
@@ -177,7 +178,7 @@ public class OverlayService extends Service {
         panelBody = new LinearLayout(this);
         panelBody.setOrientation(LinearLayout.VERTICAL);
         panelBody.setPadding(dp(8), dp(6), dp(8), dp(6));
-        panelBody.setBackground(shape(Color.rgb(61, 51, 78), 10, Color.rgb(94, 76, 119)));
+        panelBody.setBackground(shape(Color.rgb(29, 34, 31), 10, PURPLE));
         LinearLayout.LayoutParams bodyLp = new LinearLayout.LayoutParams(0, dp(174), 1);
         workspace.addView(panelBody, bodyLp);
         shell.addView(workspace);
@@ -191,15 +192,13 @@ public class OverlayService extends Service {
         TextView exit = text("SAIR DO PAINEL", 9, WHITE, true);
         exit.setGravity(Gravity.CENTER);
         exit.setPadding(dp(8), dp(7), dp(8), dp(7));
-        exit.setBackground(shape(Color.rgb(63, 34, 94), 9, PURPLE));
+        exit.setBackground(shape(Color.rgb(27, 67, 45), 9, GREEN));
         LinearLayout.LayoutParams exitLp = new LinearLayout.LayoutParams(-1, dp(27));
         exitLp.topMargin = dp(4);
         shell.addView(exit, exitLp);
         exit.setOnClickListener(v -> {
             if (panel != null) {
-                wm.removeView(panel);
-                panel = null;
-                panelBody = null;
+                stopSelf();
             }
         });
 
@@ -215,7 +214,7 @@ public class OverlayService extends Service {
         if (panelBody == null) return;
         panelBody.removeAllViews();
         panelBody.addView(text(selected, 12, CYAN, true));
-        panelBody.addView(text("━━━━━━━━━━━━━━━━━━━━", 8, Color.rgb(157, 137, 183), false));
+        panelBody.addView(text("━━━━━━━━━━━━━━━━━━━━", 8, YELLOW, false));
         String message;
         if ("AIMBOT".equals(selected) || "ESP".equals(selected) || "MEMORY".equals(selected)) {
             message = "Área reservada para informações do módulo. Esta versão não altera a mira, não revela jogadores e não modifica a memória do jogo.";

@@ -16,6 +16,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.GridLayout;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
@@ -122,8 +123,18 @@ public class OverlayService extends Service {
         LinearLayout header = new LinearLayout(this);
         header.setGravity(Gravity.CENTER_VERTICAL);
         header.setOrientation(LinearLayout.HORIZONTAL);
-        header.addView(text("CBR", 22, CYAN, true));
-        header.addView(text("  MOD  /  PAINEL", 17, WHITE, true));
+        ImageView emblem = new ImageView(this);
+        emblem.setImageResource(R.drawable.cbr_floating_logo);
+        emblem.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        LinearLayout.LayoutParams emblemLp = new LinearLayout.LayoutParams(dp(42), dp(42));
+        emblemLp.rightMargin = dp(8);
+        header.addView(emblem, emblemLp);
+        LinearLayout brand = new LinearLayout(this);
+        brand.setOrientation(LinearLayout.VERTICAL);
+        brand.setGravity(Gravity.CENTER_VERTICAL);
+        brand.addView(text("CBR MOD", 18, WHITE, true));
+        brand.addView(text("PAINEL FLUTUANTE", 8, CYAN, true));
+        header.addView(brand);
         TextView close = text("✕", 20, WHITE, true);
         close.setGravity(Gravity.RIGHT | Gravity.CENTER_VERTICAL);
         header.addView(close, new LinearLayout.LayoutParams(0, dp(38), 1));

@@ -124,7 +124,7 @@ public class OverlayService extends Service {
         header.setGravity(Gravity.CENTER_VERTICAL);
         header.setOrientation(LinearLayout.HORIZONTAL);
         ImageView emblem = new ImageView(this);
-        emblem.setImageResource(R.drawable.cbr_floating_logo);
+        emblem.setImageResource(R.drawable.cbr_floating_logo_full);
         emblem.setScaleType(ImageView.ScaleType.FIT_CENTER);
         LinearLayout.LayoutParams emblemLp = new LinearLayout.LayoutParams(dp(42), dp(42));
         emblemLp.rightMargin = dp(8);

@@ -22,9 +22,11 @@ jobs:
           gradle-version: '8.9'
       - name: Build debug APK
         run: gradle --no-daemon assembleDebug
+      - name: Rename APK
+        run: cp app/build/outputs/apk/debug/app-debug.apk "CBR MOD.apk"
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: CBR-MOD-debug
-          path: app/build/outputs/apk/debug/app-debug.apk
+          name: CBR-MOD
+          path: "CBR MOD.apk"
           if-no-files-found: error

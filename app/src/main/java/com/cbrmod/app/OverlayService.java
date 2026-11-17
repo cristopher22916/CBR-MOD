@@ -15,6 +15,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 public class OverlayService extends Service {
@@ -26,6 +27,7 @@ public class OverlayService extends Service {
     private int tapCount = 0;
     private float downX, downY;
     private int startX, startY;
+    private boolean moved;
 
     @Override public void onCreate() {
         super.onCreate();
@@ -44,6 +46,7 @@ public class OverlayService extends Service {
     }
 
     private int type() { return Build.VERSION.SDK_INT >= 26 ? WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY : WindowManager.LayoutParams.TYPE_PHONE; }
+    private int dp(float n) { return (int)(n * getResources().getDisplayMetrics().density + 0.5f); }
 
     private void createBubble() {
         bubble = new TextView(this);
@@ -53,23 +56,46 @@ public class OverlayService extends Service {
         bubble.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         bubble.setGravity(Gravity.CENTER);
         bubble.setBackgroundColor(Color.rgb(105, 55, 220));
-        bubbleParams = new WindowManager.LayoutParams( dp(58), dp(58), type(), WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT);
+        bubbleParams = new WindowManager.LayoutParams(dp(58), dp(58), type(), WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT);
         bubbleParams.gravity = Gravity.TOP | Gravity.START;
-        bubbleParams.x = dp(18); bubbleParams.y = dp(180);
+        bubbleParams.x = dp(18);
+        bubbleParams.y = dp(180);
         bubble.setOnTouchListener((v, e) -> {
             if (e.getAction() == MotionEvent.ACTION_DOWN) {
-                downX = e.getRawX(); downY = e.getRawY(); startX = bubbleParams.x; startY = bubbleParams.y; return true;
+                downX = e.getRawX();
+                downY = e.getRawY();
+                startX = bubbleParams.x;
+                startY = bubbleParams.y;
+                moved = false;
+                return true;
             }
             if (e.getAction() == MotionEvent.ACTION_MOVE) {
-                bubbleParams.x = startX + (int)(e.getRawX() - downX);
-                bubbleParams.y = startY + (int)(e.getRawY() - downY);
-                wm.updateViewLayout(bubble, bubbleParams); return true;
+                float dx = e.getRawX() - downX;
+                float dy = e.getRawY() - downY;
+                if (Math.abs(dx) > dp(8) || Math.abs(dy) > dp(8)) moved = true;
+                if (moved) {
+                    bubbleParams.x = startX + (int) dx;
+                    bubbleParams.y = startY + (int) dy;
+                    wm.updateViewLayout(bubble, bubbleParams);
+                }
+                return true;
             }
             if (e.getAction() == MotionEvent.ACTION_UP) {
-                long now = System.currentTimeMillis();
-                if (now - lastTap < 550) tapCount++; else tapCount = 1;
-                lastTap = now;
-                if (tapCount >= 3) { togglePanel(); tapCount = 0; }
+                if (!moved) {
+                    long now = System.currentTimeMillis();
+                    if (now - lastTap < 550) tapCount++; else tapCount = 1;
+                    lastTap = now;
+                    if (tapCount >= 3) {
+                        togglePanel();
+                        tapCount = 0;
+                    }
+                } else {
+                    tapCount = 0;
+                }
+                return true;
+            }
+            if (e.getAction() == MotionEvent.ACTION_CANCEL) {
+                tapCount = 0;
                 return true;
             }
             return true;
@@ -77,29 +103,43 @@ public class OverlayService extends Service {
         wm.addView(bubble, bubbleParams);
     }
 
-    private int dp(float n) { return (int)(n * getResources().getDisplayMetrics().density + 0.5f); }
-
     private void togglePanel() {
-        if (panel != null) { wm.removeView(panel); panel = null; return; }
+        if (panel != null) {
+            wm.removeView(panel);
+            panel = null;
+            return;
+        }
+
         LinearLayout box = new LinearLayout(this);
         box.setOrientation(LinearLayout.VERTICAL);
         box.setPadding(dp(16), dp(14), dp(16), dp(14));
         box.setBackgroundColor(Color.rgb(20, 15, 38));
+
         TextView title = new TextView(this);
         title.setText("CBR MOD  •  PAINEL");
         title.setTextColor(Color.rgb(190, 150, 255));
         title.setTextSize(17);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         box.addView(title);
+
+        LinearLayout content = new LinearLayout(this);
+        content.setOrientation(LinearLayout.VERTICAL);
         String[] categories = {"AIMBOT", "ESP", "MEMORY", "PLAYER", "GRAPHICS", "SETTINGS", "CONFIGS"};
         for (String c : categories) {
             TextView item = new TextView(this);
-            item.setText(c + "  •  utilitário não disponível para modificar o jogo");
+            item.setText(c + "  •  recurso de jogo não implementado");
             item.setTextColor(Color.WHITE);
             item.setTextSize(12);
             item.setPadding(0, dp(12), 0, dp(12));
-            box.addView(item);
+            content.addView(item);
         }
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(false);
+        scroll.addView(content);
+        LinearLayout.LayoutParams scrollLp = new LinearLayout.LayoutParams(-1, dp(360));
+        scrollLp.topMargin = dp(8);
+        box.addView(scroll, scrollLp);
+
         TextView close = new TextView(this);
         close.setText("FECHAR PAINEL");
         close.setTextColor(Color.rgb(190, 150, 255));
@@ -107,6 +147,7 @@ public class OverlayService extends Service {
         close.setPadding(0, dp(10), 0, dp(4));
         close.setOnClickListener(v -> togglePanel());
         box.addView(close);
+
         panel = box;
         panelParams = new WindowManager.LayoutParams(dp(300), -2, type(), WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, PixelFormat.TRANSLUCENT);
         panelParams.gravity = Gravity.CENTER;
@@ -114,6 +155,7 @@ public class OverlayService extends Service {
     }
 
     @Override public int onStartCommand(Intent intent, int flags, int startId) { return START_STICKY; }
+
     @Override public void onDestroy() {
         if (wm != null) {
             if (panel != null) { wm.removeView(panel); panel = null; }
@@ -121,5 +163,6 @@ public class OverlayService extends Service {
         }
         super.onDestroy();
     }
+
     @Override public IBinder onBind(Intent intent) { return null; }
 }

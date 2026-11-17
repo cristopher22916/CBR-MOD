@@ -11,6 +11,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.view.Gravity;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -95,6 +96,13 @@ public class MainActivity extends Activity {
     // First screen: the requested single action.
     private void showWelcome() {
         base("CBR MOD", "FREE FIRE  •  PAINEL COMPANHEIRO");
+        ImageView logo = new ImageView(this);
+        logo.setImageResource(com.cbrmod.app.R.drawable.cbr_logo);
+        logo.setAdjustViewBounds(true);
+        logo.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        LinearLayout.LayoutParams logoLp = new LinearLayout.LayoutParams(dp(230), dp(230));
+        logoLp.topMargin = dp(22);
+        root.addView(logo, logoLp);
         root.addView(new android.view.View(this), new LinearLayout.LayoutParams(1, 0, 1));
         Button start = button("INJETAR PAINEL NO FREE FIRE");
         start.setOnClickListener(v -> showMiniPanel());

@@ -175,6 +175,21 @@ public class OverlayService extends Service {
         hint.setPadding(0, dp(5), 0, 0);
         shell.addView(hint);
 
+        TextView exit = text("SAIR DO PAINEL", 9, WHITE, true);
+        exit.setGravity(Gravity.CENTER);
+        exit.setPadding(dp(8), dp(7), dp(8), dp(7));
+        exit.setBackground(shape(Color.rgb(63, 34, 94), 9, PURPLE));
+        LinearLayout.LayoutParams exitLp = new LinearLayout.LayoutParams(-1, dp(30));
+        exitLp.topMargin = dp(6);
+        shell.addView(exit, exitLp);
+        exit.setOnClickListener(v -> {
+            if (panel != null) {
+                wm.removeView(panel);
+                panel = null;
+                panelBody = null;
+            }
+        });
+
         panel = shell;
         int screenWidth = getResources().getDisplayMetrics().widthPixels;
         int panelWidth = Math.min(dp(330), screenWidth - dp(20));
